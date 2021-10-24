@@ -124,16 +124,26 @@ app.put('/api/products/:productName', (req, res, next) => {
         }
       });
     }
+    else {
+      res.status(400).send("Please include price in request.");
+    }
   }
   else {
     res.status(401).send('Unauthorized');  
   }
 });
 
-app.delete('/api/products', (req, res, next) => {
+app.delete('/api/products/:productName', (req, res, next) => {
   // Delete product
   if (is_authorized) {
-    
+    db.query('DELETE FROM product WHERE productname = $1', [req.params.productName], (err, resp) => {
+      if (err) {
+        res.status(403).send(err);
+      }
+      else {
+        res.status(200).send(resp);
+      }
+    });
   }
   else {
     res.status(401).send('Unauthorized');  
@@ -165,27 +175,80 @@ app.post('/api/user_accounts', (req, res, next) => {
 app.get('/api/user_accounts', (req, res, next) => {
   // Read user accounts
   if (is_authorized) {
-    
+    db.query('SELECT username as name, userzip as zip FROM user_account', (err, resp) => {
+      if (err) {
+        res.status(403).send(err);
+      }
+      else {
+        res.status(200).send(resp.rows);
+      }
+    });
   }
   else {
     res.status(401).send('Unauthorized');  
   }
 });
 
-app.put('/api/user_accounts', (req, res, next) => {
+app.get('/api/user_accounts/:userId', (req, res, next) => {
+  // Read user accounts
+  if (is_authorized) {
+    db.query('SELECT username as name, userzip as zip FROM user_account WHERE userid = $1', [req.params.userId], (err, resp) => {
+      if (err) {
+        res.status(403).send(err);
+      }
+      else {
+        res.status(200).send(resp.rows);
+      }
+    });
+  }
+  else {
+    res.status(401).send('Unauthorized');  
+  }
+});
+
+app.put('/api/user_accounts/:userId', (req, res, next) => {
   // Update user accounts
   if (is_authorized) {
-    
+    if (req.query.name) {
+      db.query('UPDATE user_account SET username = $1 WHERE userid = $2', [req.query.name, req.params.userId], (err, resp) => {
+        if (err) {
+          res.status(403).send(err);
+        }
+        else {
+          res.status(200).send(resp);
+        }
+      });
+    }
+    else if (req.query.zip) {
+      db.query('UPDATE user_account SET userzip = $1 WHERE userid = $2', [req.query.zip, req.params.userId], (err, resp) => {
+        if (err) {
+          res.status(403).send(err);
+        }
+        else {
+          res.status(200).send(resp);
+        }
+      });
+    }
+    else {
+      res.status(400).send("Please include something in request.");
+    }
   }
   else {
     res.status(401).send('Unauthorized');  
   }
 });
 
-app.delete('/api/user_accounts', (req, res, next) => {
+app.delete('/api/user_accounts/:userId', (req, res, next) => {
   // Delete user accounts
   if (is_authorized) {
-    
+    db.query('DELETE FROM user_accounts WHERE username = $1', [req.params.userId], (err, resp) => {
+      if (err) {
+        res.status(403).send(err);
+      }
+      else {
+        res.status(200).send(resp);
+      }
+    });
   }
   else {
     res.status(401).send('Unauthorized');  
@@ -195,37 +258,71 @@ app.delete('/api/user_accounts', (req, res, next) => {
 app.post('/api/user_carts', (req, res, next) => {
   // Create user carts
   if (is_authorized) {
-    
+    if (req.query.productId && req.query.userId)
+      db.query('INSERT INTO user_cart (productid, userid) VALUES($1, $2)', [req.query.productId, req.query.userId], (err, resp) => {
+        if (err) {
+          res.status(403).send(err);
+        } else {
+          res.status(200).send(resp);
+        }
+      });
+    else {
+      res.status(400).send("Please include something in request.");
+    }
   }
   else {
     res.status(401).send('Unauthorized');  
   }
 });
 
-app.get('/api/user_carts', (req, res, next) => {
+app.post('/api/user_carts/:cartId', (req, res, next) => {
+  // Create user carts
+  if (is_authorized) {
+    if (req.query.productId && req.query.userId)
+      db.query('INSERT INTO user_cart (cartid, productid, userid) VALUES($1, $2, $3)', [req.params.cartId, req.query.productId, req.query.userId], (err, resp) => {
+        if (err) {
+          res.status(403).send(err);
+        } else {
+          res.status(200).send(resp);
+        }
+      });
+    else {
+      res.status(400).send("Please include something in request.");
+    }
+  }
+  else {
+    res.status(401).send('Unauthorized');  
+  }
+});
+
+app.get('/api/user_carts/:cartId', (req, res, next) => {
   // Read user carts
   if (is_authorized) {
-    
+    db.query('SELECT cartid as id, productid, userid FROM user_cart WHERE cartid = $1', [req.params.cartId], (err, resp) => {
+      if (err) {
+        res.status(403).send(err);
+      }
+      else {
+        res.status(200).send(resp.rows);
+      }
+    });
   }
   else {
     res.status(401).send('Unauthorized');  
   }
 });
 
-app.put('/api/user_carts', (req, res, next) => {
-  // Update user carts
-  if (is_authorized) {
-    
-  }
-  else {
-    res.status(401).send('Unauthorized');  
-  }
-});
-
-app.delete('/api/user_carts', (req, res, next) => {
+app.delete('/api/user_carts/:cartId', (req, res, next) => {
   // Delete user carts
   if (is_authorized) {
-    
+    db.query('DELETE FROM user_cart WHERE cartid = $1', [req.params.cartId], (err, resp) => {
+      if (err) {
+        res.status(403).send(err);
+      }
+      else {
+        res.status(200).send(resp);
+      }
+    });
   }
   else {
     res.status(401).send('Unauthorized');  
